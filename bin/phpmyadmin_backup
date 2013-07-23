@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'phpmyadmin/backup'
+
+unless ARGV.size == 3
+  program = File.basename($0)
+  abort "Usage: #{program} url username password"
+end
+
+host, username, password = *ARGV
+backup = Phpmyadmin::Backup.new(host, username, password)
+filename = backup.export do |filename|
+  puts "Saved to #{filename}"
+end
