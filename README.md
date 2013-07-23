@@ -1,6 +1,6 @@
 # Phpmyadmin::Backup
 
-TODO: Write a gem description
+Backup SQL dumps via phpmyadmin
 
 ## Installation
 
@@ -18,7 +18,7 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+    $ phpmyadmin_backup URL USERNAME PASSWORD
 
 ## Contributing
 
