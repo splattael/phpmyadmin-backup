@@ -13,22 +13,41 @@ module Phpmyadmin
       login(username, password)
     end
 
-    def export
+    def export(database_names=[])
       export_url = last_page.search("#li_export a").first['href']
+
       get export_url do |page|
         dump_form = page.form_with :name => 'dump'
-        dump_form.field_with(:name => 'db_select[]').select_all
-        dump_form.checkbox_with(:name => 'asfile').checked = true
-        submit(dump_form).save 'foo.bar'
+        if database_names.empty?
+          database_names = dump_form.field_with(:name => 'db_select[]').options
+        end
+        database_names.each do |database_name|
+          filename = export_single(export_url, database_name)
+          yield filename if block_given?
+        end
       end
     end
 
     private
 
+    def export_single(export_url, database_name)
+      get export_url do |page|
+        dump_form = page.form_with :name => 'dump'
+        dump_form.field_with(:name => 'db_select[]').value = database_name
+        dump_form.checkbox_with(:name => 'asfile').checked = true
+        dump_form.field_with(:name => 'filename_template').value = "#{timestamp}.#{database_name}"
+        dump_form.radiobutton_with(:name => 'compression').value = 'bzip'
+        result = submit(dump_form)
+        result.filename
+      end
+    end
+
     def create_agent
       agent = Mechanize.new
-      agent.log = Logger.new $stderr
+      agent.log = Logger.new $stderr if $DEBUG
       agent.pluggable_parser.default = Mechanize::FileSaver
+      agent.keep_alive = false
+      agent.agent.ignore_bad_chunking = true
       agent
     end
 
@@ -51,14 +70,20 @@ module Phpmyadmin
 
     def get(url)
       @last_page = agent.get url
-      yield @last_page if block_given?
-      @last_page
+      if block_given?
+        yield @last_page
+      else
+        @last_page
+      end
     end
 
     def submit(*args)
       @last_page = agent.submit *args
-      yield @last_page if block_given?
-      @last_page
+      if block_given?
+        yield @last_page
+      else
+        @last_page
+      end
     end
 
     def url(ext=nil)
@@ -68,11 +93,9 @@ module Phpmyadmin
     def error!(message)
       raise ArgumentError, message
     end
-  end
-end
 
-if $0 == __FILE__
-  host, username, password = *ARGV
-  backup = Phpmyadmin::Backup.new(host, username, password)
-  backup.export
+    def timestamp
+      @timestamp ||= Time.new.strftime("%Y-%m-%dT%T")
+    end
+  end
 end
