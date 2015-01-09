@@ -20,6 +20,10 @@ Or install it yourself as:
 
     $ phpmyadmin_backup URL USERNAME PASSWORD
 
+### Docker
+
+    $ docker run --rm -it splattael/phpmyadmin-backup
+
 ## Contributing
 
 1. Fork it
