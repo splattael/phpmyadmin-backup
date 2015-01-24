@@ -10,7 +10,7 @@ namespace :docker do
 
   desc "Run shell in #{name}"
   task :shell => :build do
-    system "docker run --rm -it --entrypoint=bash #{name}"
+    system "docker run --rm -it --entrypoint=sh #{name}"
   end
 
   desc "Run #{name} in docker"
